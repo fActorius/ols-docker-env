@@ -5,7 +5,7 @@ services:
       driver: none
     command: ["--max-allowed-packet=512M"]
     volumes:
-      - mariadb-data:/var/lib/mysql:delegated
+      - "./data/db:/var/lib/mysql:delegated"
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
@@ -16,17 +16,19 @@ services:
       - default
   litespeed:
     image: litespeedtech/openlitespeed:${OLS_VERSION}-${PHP_VERSION}
+    env_file:
+      - .env
     volumes:
-      - litespeed-conf:/usr/local/lsws/conf
-      - litespeed-admin-conf:/usr/local/lsws/admin/conf
-      - litespeed-bin:/usr/local/bin
-      - litespeed-sites:/var/www/vhosts/
-      - litespeed-acme:/root/.acme.sh/
-      - litespeed-logs:/usr/local/lsws/logs/
+      - ./lsws/conf:/usr/local/lsws/conf
+      - ./lsws/admin-conf:/usr/local/lsws/admin/conf
+      - ./bin/container:/usr/local/bin
+      - ./sites:/var/www/vhosts/
+      - ./acme:/root/.acme.sh/
+      - ./logs:/usr/local/lsws/logs/
     ports:
-      # - 80:80
-      # - 443:443
-      # - 443:443/udp
+      # - 80:80     <--- REMOVED
+      # - 443:443   <--- REMOVED
+      # - 443:443/udp <--- REMOVED
       - 7080:7080
     restart: always
     environment:
@@ -35,6 +37,10 @@ services:
       - default
   phpmyadmin:
     image: phpmyadmin/phpmyadmin:${PHPMYADMIN_VERSION}
+    env_file:
+      - .env
+    # ports:        <--- REMOVED
+    #  - 8080:80    <--- REMOVED
     environment:
       PMA_HOST: mysql
     restart: always
@@ -45,8 +51,8 @@ services:
     logging:
       driver: none
     volumes:
-      # FIXED: Removed the invalid file mount and only kept the data volume
-      - redis-data:/data
+      - ./redis/data:/data
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
     environment:
       - REDIS_REPLICATION_MODE=master
     restart: always
@@ -55,14 +61,3 @@ services:
 networks:
   default:
     driver: bridge
-
-# This block defines all the named volumes for Coolify to create
-volumes:
-  mariadb-data:
-  litespeed-conf:
-  litespeed-admin-conf:
-  litespeed-bin:
-  litespeed-sites:
-  litespeed-acme:
-  litespeed-logs:
-  redis-data:
