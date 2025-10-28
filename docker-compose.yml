@@ -5,7 +5,8 @@ services:
       driver: none
     command: ["--max-allowed-packet=512M"]
     volumes:
-      - "./data/db:/var/lib/mysql:delegated"
+      # USE NAMED VOLUME
+      - mariadb-data:/var/lib/mysql:delegated
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
@@ -15,20 +16,19 @@ services:
     networks:
       - default
   litespeed:
-    image: litespeedtech/openlitespeed:${OLS_VERSION}-${PHP_VERSION}
-    env_file:
-      - .env
+    # BUILD the custom Dockerfile
+    build:
+      context: .
+      dockerfile: litespeed.Dockerfile
     volumes:
-      - ./lsws/conf:/usr/local/lsws/conf
-      - ./lsws/admin-conf:/usr/local/lsws/admin/conf
-      - ./bin/container:/usr/local/bin
-      - ./sites:/var/www/vhosts/
-      - ./acme:/root/.acme.sh/
-      - ./logs:/usr/local/lsws/logs/
+      # USE NAMED VOLUMES (no more relative paths for config)
+      - litespeed-conf:/usr/local/lsws/conf
+      - litespeed-admin-conf:/usr/local/lsws/admin/conf
+      - litespeed-sites:/var/www/vhosts/
+      - litespeed-acme:/root/.acme.sh/
+      - litespeed-logs:/usr/local/lsws/logs/
     ports:
-      # - 80:80     <--- REMOVED
-      # - 443:443   <--- REMOVED
-      # - 443:443/udp <--- REMOVED
+      # REMOVED port conflicts
       - 7080:7080
     restart: always
     environment:
@@ -37,10 +37,7 @@ services:
       - default
   phpmyadmin:
     image: phpmyadmin/phpmyadmin:${PHPMYADMIN_VERSION}
-    env_file:
-      - .env
-    # ports:        <--- REMOVED
-    #  - 8080:80    <--- REMOVED
+    # REMOVED port conflicts
     environment:
       PMA_HOST: mysql
     restart: always
@@ -51,13 +48,23 @@ services:
     logging:
       driver: none
     volumes:
-      - ./redis/data:/data
-      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
+      # USE NAMED VOLUME
+      - redis-data:/data
     environment:
-      - REDIS_REPLICATION_MODE=master
+      - REDIS_REPLICATION_MODE: master
     restart: always
     networks:
       - default
 networks:
   default:
     driver: bridge
+
+# DEFINE all the named volumes
+volumes:
+  mariadb-data: {}
+  litespeed-conf: {}
+  litespeed-admin-conf: {}
+  litespeed-sites: {}
+  litespeed-acme: {}
+  litespeed-logs: {}
+  redis-data: {}
