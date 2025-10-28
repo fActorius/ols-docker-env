@@ -3,7 +3,7 @@ services:
     image: mariadb:11.4
     logging:
       driver: none
-    command: ["--max-allowed-packet=512M"]
+    command: "--max-allowed-packet=512M"
     volumes:
       # USE NAMED VOLUME
       - mariadb-data:/var/lib/mysql:delegated
@@ -49,7 +49,7 @@ services:
       # USE NAMED VOLUME
       - redis-data:/data
     environment:
-      - REDIS_REPLICATION_MODE: master
+      REDIS_REPLICATION_MODE: master
     restart: always
     networks:
       - default
