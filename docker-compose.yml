@@ -1,8 +1,6 @@
 services:
   mysql:
     image: mariadb:11.4
-    logging:
-      driver: none
     command: "--max-allowed-packet=512M"
     volumes:
       # USE NAMED VOLUME
@@ -18,6 +16,8 @@ services:
   litespeed:
     # BUILD the custom Dockerfile
     build: .
+    expose:
+      - 80
     volumes:
       # USE NAMED VOLUMES (no more relative paths for config)
       - litespeed-conf:/usr/local/lsws/conf
@@ -43,8 +43,6 @@ services:
       - default
   redis:
     image: "redis:alpine"
-    logging:
-      driver: none
     volumes:
       # USE NAMED VOLUME
       - redis-data:/data
